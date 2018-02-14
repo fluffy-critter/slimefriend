@@ -6,11 +6,12 @@
 
 setmetatable(_G, {
     __newindex = function(_, name, _)
-        error("attempted to write to global variable " .. name, 2)
+        error("attempted to write to gverbal variable " .. name, 2)
     end
 })
 
 local densityMap = love.graphics.newCanvas(1024, 1024)
+local slimeShader = love.graphics.newShader("slime.fs")
 
 local Blob = {}
 
@@ -36,11 +37,21 @@ local function blitCanvas(canvas, aspect)
 end
 
 function love.load()
-    Blob.density = love.graphics.newImage('density.png')
+    Blob.density = love.graphics.newCanvas(512, 512)
+    Blob.density:renderTo(function()
+        local fakeImage = love.image.newImageData(512,512)
+        fakeImage:mapPixel(function()
+            return math.random(255), math.random(255), math.random(255)
+        end)
+        love.graphics.setShader(love.graphics.newShader("makeDensityMap.fs"))
+        love.graphics.draw(love.graphics.newImage(fakeImage), 0, 0)
+        love.graphics.setShader()
+    end)
+
     Blob.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 
     slime.blobs = {}
-    for _=1,10 do
+    for _=1,100 do
         local size = math.random(256)
         table.insert(slime.blobs, {
             x = math.random(1024 - size),
@@ -64,8 +75,9 @@ function love.update(dt)
 
             local dx, dy = bb.x - ba.x, bb.y - ba.y
             local dd2 = dx*dx + dy*dy
-            local dd = math.sqrt(dd2) + 1
+            local dd = math.sqrt(dd2) + 1e-12
             local nx, ny = dx/dd, dy/dd
+
 
             local attractDistance = ba.size + bb.size
             if dd < attractDistance then
@@ -107,14 +119,23 @@ function love.update(dt)
 end
 
 function love.draw()
+
     densityMap:renderTo(function()
         love.graphics.clear(0,0,0)
 
-        love.graphics.setBlendMode("add")
+        love.graphics.setBlendMode("add", "premultiplied")
+        love.graphics.setColor(64,25,64)
         for _,blob in pairs(slime.blobs) do
             love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size)
         end
     end)
 
+    love.graphics.setBlendMode("alpha", "premultiplied")
+    love.graphics.setShader(slimeShader)
+    slimeShader:send("size", {densityMap:getDimensions()})
+    love.graphics.setColor(255,255,255)
     blitCanvas(densityMap)
+    love.graphics.setShader()
+
+    -- blitCanvas(Blob.density)
 end
