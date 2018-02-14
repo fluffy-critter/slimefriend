@@ -10,7 +10,11 @@ setmetatable(_G, {
     end
 })
 
-local densityMap = love.graphics.newCanvas(1024, 1024)
+local gfx = require('gfx')
+local fpFormat = gfx.selectCanvasFormat("rg11b10f", "rgba16f", "rgba32f")
+
+local densityMap = love.graphics.newCanvas(1024, 1024, fpFormat)
+local canvas = love.graphics.newCanvas(1024, 1024)
 local slimeShader = love.graphics.newShader("slime.fs")
 
 local Blob = {}
@@ -37,7 +41,7 @@ local function blitCanvas(canvas, aspect)
 end
 
 function love.load()
-    Blob.density = love.graphics.newCanvas(512, 512)
+    Blob.density = love.graphics.newCanvas(512, 512, fpFormat)
     Blob.density:renderTo(function()
         local fakeImage = love.image.newImageData(512,512)
         fakeImage:mapPixel(function()
@@ -48,14 +52,14 @@ function love.load()
         love.graphics.setShader()
     end)
 
-    Blob.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
+    Blob.quad = love.graphics.newQuad(0, 0, 2, 2, 2, 2)
 
     slime.blobs = {}
-    for _=1,100 do
-        local size = math.random(256)
+    for _=1,10 do
+        local size = math.random(1, 200)
         table.insert(slime.blobs, {
-            x = math.random(1024 - size),
-            y = math.random(1024 - size),
+            x = math.random(size, 1024 - size),
+            y = math.random(size, 1024 - size),
             size = size,
             vx = 0,
             vy = 0,
@@ -67,6 +71,7 @@ end
 
 function love.update(dt)
     local gravity = 500
+    local friction = math.pow(0.9, dt)
 
     for i=1,#slime.blobs do
         local ba = slime.blobs[i]
@@ -76,21 +81,15 @@ function love.update(dt)
             local dx, dy = bb.x - ba.x, bb.y - ba.y
             local dd2 = dx*dx + dy*dy
             local dd = math.sqrt(dd2) + 1e-12
-            local nx, ny = dx/dd, dy/dd
 
+            local fx, fy = 0, 0
 
-            local attractDistance = ba.size + bb.size
-            if dd < attractDistance then
-                -- the blobs are touching, so pull them closer
-                ba.ax, ba.ay = ba.ax + nx, ba.ay + ny
-                bb.ax, bb.ay = bb.ax - nx, bb.ay - ny
-            end
+            -- gravitational attraction
+            fx = (fx + dx/dd2)*100
+            fy = (fy + dy/dd2)*100
 
-            if dd < math.min(ba.size, bb.size) then
-                -- but their cores are already touching so repel a bit
-                ba.ax, ba.ay = ba.ay - nx/dd2, ba.ax + nx/dd2
-                bb.ax, bb.ay = bb.ay + nx/dd2, bb.ax + nx/dd2
-            end
+            ba.ax, ba.ay = fx/ba.size, fy/ba.size
+            bb.ax, bb.ay = -fx/bb.size, -fy/bb.size
         end
     end
 
@@ -113,8 +112,8 @@ function love.update(dt)
         blob.x = blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
         blob.y = blob.y + (blob.vy + 0.5*(blob.ay + gravity)*dt)*dt
 
-        blob.vx = blob.vx*0.9 + blob.ax*dt
-        blob.vy = blob.vy*0.9 + (blob.ay + gravity)*dt
+        blob.vx = blob.vx*friction + blob.ax*dt
+        blob.vy = blob.vy*friction + (blob.ay + gravity)*dt
     end
 end
 
@@ -124,18 +123,26 @@ function love.draw()
         love.graphics.clear(0,0,0)
 
         love.graphics.setBlendMode("add", "premultiplied")
-        love.graphics.setColor(64,25,64)
+        love.graphics.setColor(255,255,255)
         for _,blob in pairs(slime.blobs) do
-            love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size)
+            love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
 
     love.graphics.setBlendMode("alpha", "premultiplied")
     love.graphics.setShader(slimeShader)
-    slimeShader:send("size", {densityMap:getDimensions()})
     love.graphics.setColor(255,255,255)
     blitCanvas(densityMap)
     love.graphics.setShader()
+
+    canvas:renderTo(function()
+        love.graphics.clear(0, 0, 0, 0)
+        love.graphics.setColor(255,255,255,255)
+        for _,blob in pairs(slime.blobs) do
+            love.graphics.circle("line", blob.x, blob.y, blob.size)
+        end
+    end)
+    -- blitCanvas(canvas)
 
     -- blitCanvas(Blob.density)
 end
