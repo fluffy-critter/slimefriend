@@ -17,6 +17,7 @@ local fpFormat = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f"
 
 local densityFront = love.graphics.newCanvas(1024, 1024, fpFormat)
 local densityBack = love.graphics.newCanvas(1024, 1024, fpFormat)
+local colorMap = love.graphics.newCanvas(1024, 1024, fpFormat)
 
 local canvas = love.graphics.newCanvas(1024, 1024)
 local slimeShader = love.graphics.newShader("slime.fs")
@@ -59,8 +60,9 @@ function love.load()
     Blob.quad = love.graphics.newQuad(0, 0, 2, 2, 2, 2)
 
     slime.blobs = {}
-    for _=1,10 do
+    for _=1,50 do
         local size = math.random(1, 200)
+        local hue = math.random()*math.pi*2
         table.insert(slime.blobs, {
             x = math.random(512 - size/4, 512 + size/4),
             y = math.random(512 - size, 512 - size/4),
@@ -68,7 +70,10 @@ function love.load()
             vx = 0,
             vy = 0,
             ax = 0,
-            ay = 0
+            ay = 0,
+            color = {128 + 128*math.cos(hue),
+                128 + 128*math.cos(hue + math.pi*2/3),
+                128 + 128*math.cos(hue - math.pi*2/3)}
         })
     end
 
@@ -93,9 +98,8 @@ function love.update(dt)
             local dd2 = dx*dx + dy*dy
             local dd = math.sqrt(dd2) + 1e-12
 
-            -- expected distance (placing the center of the smaller on the edge of the larger)
-            local ed = math.min(ba.size, bb.size)
-
+            -- expected distance
+            local ed = math.min(ba.size, bb.size)/2
 
             if dd < ed then
                 -- repulsive force
@@ -142,7 +146,7 @@ end
 function love.draw()
 
     densityFront:renderTo(function()
-        love.graphics.clear(0,0,0)
+        love.graphics.clear(0,0,0,0)
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(slime.blobs) do
@@ -150,6 +154,17 @@ function love.draw()
             love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
+
+    colorMap:renderTo(function()
+        love.graphics.clear(0,0,0,0)
+
+        love.graphics.setBlendMode("add", "premultiplied")
+        for _,blob in pairs(slime.blobs) do
+            love.graphics.setColor(unpack(blob.color))
+            love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
+        end
+    end)
+
 
     -- smooth the density buffer
     --[[densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
@@ -169,7 +184,7 @@ function love.draw()
         slimeShader:send("lightDir", {-1, -1, 1})
         slimeShader:send("densityMap", densityFront)
         slimeShader:send("size", {densityFront:getDimensions()})
-        slimeShader:send("slimeColor", {0.5,0.2,0.2,1})
+        slimeShader:send("slimeColor", colorMap)
         slimeShader:send("specularColor", {1,1,1,1})
         love.graphics.draw(background)
         love.graphics.setShader()
