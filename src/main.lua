@@ -13,15 +13,15 @@ setmetatable(_G, {
 local DEBUG = false
 
 local gfx = require('gfx')
+
+local Game = {}
 local fpFormat = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f")
 
-local densityFront = love.graphics.newCanvas(1024, 1024, fpFormat)
-local densityBack = love.graphics.newCanvas(1024, 1024, fpFormat)
+local densityMap = love.graphics.newCanvas(1024, 1024, fpFormat)
 local colorMap = love.graphics.newCanvas(1024, 1024, fpFormat)
 
 local canvas = love.graphics.newCanvas(1024, 1024)
 local slimeShader = love.graphics.newShader("slime.fs")
-local gaussBlur = love.graphics.newShader("gaussBlur.fs")
 
 local background
 
@@ -145,7 +145,7 @@ end
 
 function love.draw()
 
-    densityFront:renderTo(function()
+    densityMap:renderTo(function()
         love.graphics.clear(0,0,0,0)
 
         love.graphics.setBlendMode("add", "premultiplied")
@@ -165,13 +165,6 @@ function love.draw()
         end
     end)
 
-
-    -- smooth the density buffer
-    --[[densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
-        gaussBlur, {sampleRadius = {0, 1.0/densityFront:getHeight()}})
-    densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
-        gaussBlur, {sampleRadius = {1.0/densityFront:getWidth(), 0}})]]
-
     canvas:renderTo(function()
         love.graphics.clear(0,0,0,0)
         love.graphics.setBlendMode("alpha")
@@ -182,8 +175,8 @@ function love.draw()
         love.graphics.setShader(slimeShader)
         love.graphics.setColor(255,255,255)
         slimeShader:send("lightDir", {-1, -1, 1})
-        slimeShader:send("densityMap", densityFront)
-        slimeShader:send("size", {densityFront:getDimensions()})
+        slimeShader:send("densityMap", densityMap)
+        slimeShader:send("size", {densityMap:getDimensions()})
         slimeShader:send("slimeColor", colorMap)
         slimeShader:send("specularColor", {1,1,1,1})
         love.graphics.draw(background)
