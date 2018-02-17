@@ -3,6 +3,7 @@ uniform vec3 lightDir;
 uniform Image densityMap;
 uniform vec4 slimeColor; // TODO: color map
 uniform vec4 specularColor;
+uniform vec4 reflectColor;
 
 vec3 pos(vec2 tc) {
     return vec3(tc, Texel(densityMap, tc).r*0.5);
@@ -25,17 +26,16 @@ vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
 
     vec3 eye = vec3(0., 0., -1.);
 
-    float phong = pow(max(0., dot(reflect(eye, nrm), lightDirNrm)), 10.);
+    vec3 reflected = reflect(eye, nrm);
 
-    // vec3 reflected = reflect(eye, nrm);
+    float phong = pow(max(0., dot(reflected, lightDirNrm)), 10.);
+
     float fresnel = pow(length(nrm.xy), 50.0);
 
     vec4 bgTexel = Texel(txt, tc + refract(eye, nrm, 0.99).xy);
     vec4 bgColor = max(vec4(0.,0.,0.,0.), mix(bgTexel, bgTexel*slimeColor, density*.5 + .5));
 
     float lambert = max(0., dot(nrm, lightDirNrm));
-
-// return vec4(nrm*.5 + .5, 1.);
 
     return bgColor + slimeColor*lambert*fresnel + specularColor*phong;
 }

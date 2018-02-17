@@ -59,11 +59,11 @@ function love.load()
     Blob.quad = love.graphics.newQuad(0, 0, 2, 2, 2, 2)
 
     slime.blobs = {}
-    for _=1,100 do
+    for _=1,10 do
         local size = math.random(1, 200)
         table.insert(slime.blobs, {
             x = math.random(size, 1024 - size),
-            y = math.random(size, 1024 - size),
+            y = math.random(size, 512 - size),
             size = size,
             vx = 0,
             vy = 0,
@@ -76,8 +76,13 @@ function love.load()
 end
 
 function love.update(dt)
-    local gravity = 200
+    local gravity = 250
     local friction = math.pow(0.9, dt)
+
+    for _,blob in ipairs(slime.blobs) do
+        blob.ax = 0
+        blob.ay = gravity
+    end
 
     for i=1,#slime.blobs do
         local ba = slime.blobs[i]
@@ -91,16 +96,20 @@ function love.update(dt)
             -- expected distance (placing the center of the smaller on the edge of the larger)
             local ed = math.min(ba.size, bb.size)
 
-            local mass = ba.size + bb.size
-            local fx = dx*ed*mass/dd
-            local fy = dy*ed*mass/dd
 
-            ba.ax, ba.ay = fx/ba.size, fy/ba.size
-            bb.ax, bb.ay = -fx/bb.size, -fy/bb.size
+            if dd < ed then
+                -- repulsive force
+                local mass = ba.size + bb.size
+                local fx = dx*ed/dd
+                local fy = dy*ed/dd
+                ba.ax, ba.ay = ba.ax - fx*bb.size/mass, ba.ay - fy*bb.size/mass
+                bb.ax, bb.ay = bb.ax + fx*ba.size/mass, bb.ay + fy*ba.size/mass
+            end
+
         end
     end
 
-    for _,blob in pairs(slime.blobs) do
+    for _,blob in ipairs(slime.blobs) do
         if blob.x + blob.size > 1024 then
             blob.vx = blob.vx + 1024 - (blob.x + blob.size)
         end
@@ -108,19 +117,25 @@ function love.update(dt)
             blob.vx = blob.vx - (blob.x - blob.size)
         end
 
-        if blob.y + blob.size > 1024 then
-            blob.vy = blob.vy + 1024 - (blob.y + blob.size)
+        local yBottom = blob.x*(1024 - blob.x)/1024 + 512
+        local depth = blob.y + blob.size - yBottom
+        if depth > 0 then
+            local nx = blob.x/512 - 1
+            local ny = 1
+            local nn = math.sqrt(nx*nx + ny*ny)
+            blob.vx = blob.vx - nx*depth/nn
+            blob.vy = blob.vy - ny*depth/nn
         end
+
         if blob.y - blob.size < 0 then
             blob.vy = blob.vy - (blob.y - blob.size)
         end
 
-
         blob.x = blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
-        blob.y = blob.y + (blob.vy + 0.5*(blob.ay + gravity)*dt)*dt
+        blob.y = blob.y + (blob.vy + 0.5*blob.ay*dt)*dt
 
         blob.vx = blob.vx*friction + blob.ax*dt
-        blob.vy = blob.vy*friction + (blob.ay + gravity)*dt
+        blob.vy = blob.vy*friction + blob.ay*dt
     end
 end
 
