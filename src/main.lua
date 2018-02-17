@@ -62,8 +62,8 @@ function love.load()
     for _=1,10 do
         local size = math.random(1, 200)
         table.insert(slime.blobs, {
-            x = math.random(size, 1024 - size),
-            y = math.random(size, 512 - size),
+            x = math.random(512 - size/4, 512 + size/4),
+            y = math.random(512 - size, 512 - size/4),
             size = size,
             vx = 0,
             vy = 0,
@@ -123,8 +123,8 @@ function love.update(dt)
             local nx = blob.x/512 - 1
             local ny = 1
             local nn = math.sqrt(nx*nx + ny*ny)
-            blob.vx = blob.vx - nx*depth/nn
-            blob.vy = blob.vy - ny*depth/nn
+            blob.vx = blob.vx - nx*depth/nn/2
+            blob.vy = blob.vy - ny*depth/nn/2
         end
 
         if blob.y - blob.size < 0 then
