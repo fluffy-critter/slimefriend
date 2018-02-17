@@ -59,7 +59,7 @@ function love.load()
     Blob.quad = love.graphics.newQuad(0, 0, 2, 2, 2, 2)
 
     slime.blobs = {}
-    for _=1,10 do
+    for _=1,100 do
         local size = math.random(1, 200)
         table.insert(slime.blobs, {
             x = math.random(size, 1024 - size),
@@ -76,7 +76,7 @@ function love.load()
 end
 
 function love.update(dt)
-    local gravity = 500
+    local gravity = 200
     local friction = math.pow(0.9, dt)
 
     for i=1,#slime.blobs do
@@ -88,11 +88,12 @@ function love.update(dt)
             local dd2 = dx*dx + dy*dy
             local dd = math.sqrt(dd2) + 1e-12
 
-            local fx, fy = 0, 0
+            -- expected distance (placing the center of the smaller on the edge of the larger)
+            local ed = math.min(ba.size, bb.size)
 
-            -- gravitational attraction
-            fx = (fx + dx/dd2)*100
-            fy = (fy + dy/dd2)*100
+            local mass = ba.size + bb.size
+            local fx = dx*ed*mass/dd
+            local fy = dy*ed*mass/dd
 
             ba.ax, ba.ay = fx/ba.size, fy/ba.size
             bb.ax, bb.ay = -fx/bb.size, -fy/bb.size
@@ -130,30 +131,31 @@ function love.draw()
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(slime.blobs) do
-            love.graphics.setColor(255, 255, 255)
+            love.graphics.setColor(blob.size, 255, 255)
             love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
 
     -- smooth the density buffer
-    densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
+    --[[densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
         gaussBlur, {sampleRadius = {0, 1.0/densityFront:getHeight()}})
     densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
-        gaussBlur, {sampleRadius = {1.0/densityFront:getWidth(), 0}})
+        gaussBlur, {sampleRadius = {1.0/densityFront:getWidth(), 0}})]]
 
     canvas:renderTo(function()
         love.graphics.clear(0,0,0,0)
         love.graphics.setBlendMode("alpha")
+        love.graphics.setColor(255,255,255)
         love.graphics.draw(background)
 
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.setShader(slimeShader)
         love.graphics.setColor(255,255,255)
-        slimeShader:send("lightDir", {-1, -1, -1})
+        slimeShader:send("lightDir", {-1, -1, 1})
         slimeShader:send("densityMap", densityFront)
         slimeShader:send("size", {densityFront:getDimensions()})
         slimeShader:send("slimeColor", {0.5,0.2,0.2,1})
-        slimeShader:send("specular", {1,1,1,1})
+        slimeShader:send("specularColor", {1,1,1,1})
         love.graphics.draw(background)
         love.graphics.setShader()
 
