@@ -10,12 +10,19 @@ setmetatable(_G, {
     end
 })
 
-local gfx = require('gfx')
-local fpFormat = gfx.selectCanvasFormat("rg11b10f", "rgba16f", "rgba32f")
+local DEBUG = false
 
-local densityMap = love.graphics.newCanvas(1024, 1024, fpFormat)
+local gfx = require('gfx')
+local fpFormat = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f")
+
+local densityFront = love.graphics.newCanvas(1024, 1024, fpFormat)
+local densityBack = love.graphics.newCanvas(1024, 1024, fpFormat)
+
 local canvas = love.graphics.newCanvas(1024, 1024)
 local slimeShader = love.graphics.newShader("slime.fs")
+local gaussBlur = love.graphics.newShader("gaussBlur.fs")
+
+local background
 
 local Blob = {}
 
@@ -43,12 +50,9 @@ end
 function love.load()
     Blob.density = love.graphics.newCanvas(512, 512, fpFormat)
     Blob.density:renderTo(function()
-        local fakeImage = love.image.newImageData(512,512)
-        fakeImage:mapPixel(function()
-            return math.random(255), math.random(255), math.random(255)
-        end)
+        local fakeImage = love.image.newImageData(2, 2)
         love.graphics.setShader(love.graphics.newShader("makeDensityMap.fs"))
-        love.graphics.draw(love.graphics.newImage(fakeImage), 0, 0)
+        love.graphics.draw(love.graphics.newImage(fakeImage), 0, 0, 0, 256, 256)
         love.graphics.setShader()
     end)
 
@@ -67,6 +71,8 @@ function love.load()
             ay = 0
         })
     end
+
+    background = love.graphics.newImage('background.png')
 end
 
 function love.update(dt)
@@ -119,30 +125,44 @@ end
 
 function love.draw()
 
-    densityMap:renderTo(function()
+    densityFront:renderTo(function()
         love.graphics.clear(0,0,0)
 
         love.graphics.setBlendMode("add", "premultiplied")
-        love.graphics.setColor(255,255,255)
         for _,blob in pairs(slime.blobs) do
+            love.graphics.setColor(255, 255, 255)
             love.graphics.draw(Blob.density, Blob.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
 
-    love.graphics.setBlendMode("alpha", "premultiplied")
-    love.graphics.setShader(slimeShader)
-    love.graphics.setColor(255,255,255)
-    blitCanvas(densityMap)
-    love.graphics.setShader()
+    -- smooth the density buffer
+    densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
+        gaussBlur, {sampleRadius = {0, 1.0/densityFront:getHeight()}})
+    densityFront, densityBack = gfx.mapShader(densityFront, densityBack,
+        gaussBlur, {sampleRadius = {1.0/densityFront:getWidth(), 0}})
 
     canvas:renderTo(function()
-        love.graphics.clear(0, 0, 0, 0)
-        love.graphics.setColor(255,255,255,255)
-        for _,blob in pairs(slime.blobs) do
-            love.graphics.circle("line", blob.x, blob.y, blob.size)
+        love.graphics.clear(0,0,0,0)
+        love.graphics.setBlendMode("alpha")
+        love.graphics.draw(background)
+
+        love.graphics.setBlendMode("alpha", "premultiplied")
+        love.graphics.setShader(slimeShader)
+        love.graphics.setColor(255,255,255)
+        slimeShader:send("lightDir", {-1, -1, -1})
+        slimeShader:send("densityMap", densityFront)
+        slimeShader:send("size", {densityFront:getDimensions()})
+        slimeShader:send("slimeColor", {0.5,0.2,0.2,1})
+        slimeShader:send("specular", {1,1,1,1})
+        love.graphics.draw(background)
+        love.graphics.setShader()
+
+        if DEBUG then
+            love.graphics.setColor(255,255,255,255)
+            for _,blob in pairs(slime.blobs) do
+                love.graphics.circle("line", blob.x, blob.y, blob.size)
+            end
         end
     end)
-    -- blitCanvas(canvas)
-
-    -- blitCanvas(Blob.density)
+    blitCanvas(canvas)
 end
