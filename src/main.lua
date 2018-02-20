@@ -65,10 +65,12 @@ end
 
 function love.update(dt)
     Game.slime:update(dt)
+
+    Game.mouseOver = Game.slime:atPosition(love.mouse.getPosition())
 end
 
 function love.draw()
-    local slimeCanvas = Game.slime:draw(background)
+    local slimeCanvas = Game.slime:draw(background, Game.mouseOver)
 
     canvas:renderTo(function()
         love.graphics.setColor(255,255,255)

@@ -111,8 +111,7 @@ function Slime:update(dt)
     end
 end
 
-function Slime:draw(background)
-
+function Slime:draw(background, mouseOver)
     self.densityMap:renderTo(function()
         love.graphics.clear(0,0,0,0)
 
@@ -128,7 +127,11 @@ function Slime:draw(background)
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(self.blobs) do
-            love.graphics.setColor(unpack(blob.color))
+            if blob == mouseOver then
+                love.graphics.setColor(25500,25500,25500,25500)
+            else
+                love.graphics.setColor(unpack(blob.color))
+            end
             love.graphics.draw(self.sprite, self.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
@@ -156,6 +159,21 @@ function Slime:draw(background)
     end)
 
     return self.canvas
+end
+
+function Slime:atPosition(x, y)
+    local nearest, distance
+
+    for _,blob in ipairs(self.blobs) do
+        local dx, dy = x - blob.x, y - blob.y
+        local dd2 = dx*dx + dy*dy
+        if dd2 < blob.size*blob.size and (not distance or dd2/blob.size < distance) then
+            nearest = blob
+            distance = dd2/blob.size
+        end
+    end
+
+    return nearest
 end
 
 return Slime
