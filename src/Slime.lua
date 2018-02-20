@@ -21,7 +21,8 @@ function Slime.new(o)
         blobRes = 512,
         blobs = {},
         gravity = 250,
-        friction = 0.9
+        friction = 0.9,
+        transfer = 0.01
     })
 
     local fpFormat = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f")
@@ -47,11 +48,14 @@ end
 
 function Slime:update(dt)
     local friction = math.pow(self.friction, dt)
+    local transferRate = 1 - math.pow(1 - self.transfer, dt)
 
     for _,blob in ipairs(self.blobs) do
         blob.ax = 0
         blob.ay = self.gravity
     end
+
+    local flows = {}
 
     for i=1,#self.blobs do
         local ba = self.blobs[i]
@@ -76,9 +80,20 @@ function Slime:update(dt)
 
                 bb.ax = bb.ax + fx*ba.size/mass
                 bb.ay = bb.ay + fy*ba.size/mass
-            end
 
+                local flow = {
+                    ba = ba,
+                    bb = bb,
+                    delta = (bb.size - ba.size)*transferRate
+                }
+                table.insert(flows, flow)
+            end
         end
+    end
+
+    for _,f in ipairs(flows) do
+        f.ba.size = f.ba.size + f.delta
+        f.bb.size = f.bb.size - f.delta
     end
 
     for _,blob in ipairs(self.blobs) do
