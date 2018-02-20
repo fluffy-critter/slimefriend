@@ -18,10 +18,10 @@ function Slime.new(o)
     util.applyDefaults(self, {
         width = 1024,
         height = 1024,
-        blobRes = 512,
+        blobRes = 256,
         blobs = {},
         gravity = 250,
-        friction = 0.9,
+        friction = 0.5,
         transfer = 0.01
     })
 
@@ -29,7 +29,7 @@ function Slime.new(o)
 
     self.densityMap = love.graphics.newCanvas(self.width, self.height, fpFormat)
     self.colorMap = love.graphics.newCanvas(self.width, self.height, fpFormat)
-    self.canvas = love.graphics.newCanvas(self.width, self.height, gfx.selectCanvasFormat("rgba8", "rgba4"))
+    self.canvas = love.graphics.newCanvas(self.width, self.height, gfx.selectCanvasFormat("rgba8", "rgb10a2", "rgb5a1", "rgba4"))
 
     self.shader = love.graphics.newShader("slime.fs")
 
@@ -97,17 +97,17 @@ function Slime:update(dt)
     end
 
     for _,blob in ipairs(self.blobs) do
-        if blob.x + blob.size > 1024 then
-            blob.vx = blob.vx + 1024 - (blob.x + blob.size)
+        if blob.x + blob.size > self.width then
+            blob.vx = blob.vx + self.width - (blob.x + blob.size)
         end
         if blob.x - blob.size < 0 then
             blob.vx = blob.vx - (blob.x - blob.size)
         end
 
-        local yBottom = blob.x*(self.width - blob.x)/self.width + self.height/2
+        local yBottom = math.min(self.height, blob.x*(self.width - blob.x)/self.width + self.height/2)
         local depth = blob.y + blob.size - yBottom
         if depth > 0 then
-            local nx = blob.x/512 - 1
+            local nx = blob.x/(self.width/2) - 1
             local ny = 1
             local nn = math.sqrt(nx*nx + ny*ny)
             blob.vx = blob.vx - nx*depth/nn/2
@@ -159,10 +159,11 @@ function Slime:draw(background, mouseOver)
         love.graphics.setColor(255,255,255)
         self.shader:send("lightDir", {-1, -1, 1})
         self.shader:send("densityMap", self.densityMap)
+        self.shader:send("background", background)
         self.shader:send("size", {self.densityMap:getDimensions()})
         self.shader:send("slimeColor", self.colorMap)
         self.shader:send("specularColor", {1,1,1,1})
-        love.graphics.draw(background)
+        love.graphics.draw(self.densityMap)
         love.graphics.setShader()
 
         if config.debug then
@@ -182,7 +183,7 @@ function Slime:atPosition(x, y)
     for _,blob in ipairs(self.blobs) do
         local dx, dy = x - blob.x, y - blob.y
         local dd2 = dx*dx + dy*dy
-        if dd2 < blob.size*blob.size and (not distance or dd2/blob.size < distance) then
+        if dd2 < blob.size*blob.size/2 and (not distance or dd2/blob.size < distance) then
             nearest = blob
             distance = dd2/blob.size
         end

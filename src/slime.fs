@@ -2,6 +2,7 @@ uniform vec2 size;
 uniform vec3 lightDir;
 uniform Image densityMap;
 uniform Image slimeColor;
+uniform Image background;
 uniform vec4 specularColor;
 
 vec3 pos(vec2 tc) {
@@ -32,7 +33,7 @@ vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
 
     float fresnel = pow(length(nrm.xy), 50.0);
 
-    vec4 bgTexel = Texel(txt, tc + refract(eye, nrm, 0.99).xy);
+    vec4 bgTexel = Texel(background, tc + refract(eye, nrm, 0.99).xy);
     vec4 bgColor = max(vec4(0.,0.,0.,0.), mix(bgTexel, bgTexel*localColor, density*.5 + .5));
 
     float lambert = max(0., dot(nrm, lightDirNrm));

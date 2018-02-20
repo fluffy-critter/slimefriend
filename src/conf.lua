@@ -10,10 +10,10 @@ conf.lua - LÖVE configuration
 function love.conf(t)
     t.modules.joystick = true
     t.modules.physics = false
-    t.window.resizable = false
+    t.window.resizable = true
     t.window.fullscreen = false
-    t.window.width = 1024
-    t.window.height = 1024
+    t.window.width = 1280
+    t.window.height = 960
 
     t.version = "0.10.2"
 

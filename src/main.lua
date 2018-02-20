@@ -17,9 +17,16 @@ local Slime = require('slime')
 
 local Game = {}
 
-local canvas = love.graphics.newCanvas(1024, 1024)
+local canvas = love.graphics.newCanvas(640, 480)
+canvas:setFilter("nearest")
 
 local background
+
+local uiOffset = {
+    x = 0, y = 0, sx = 1, sy = 1
+}
+
+local mx, my
 
 local function blitCanvas(canvas, aspect)
     local screenWidth = love.graphics.getWidth()
@@ -36,19 +43,25 @@ local function blitCanvas(canvas, aspect)
 
     local blitX = (love.graphics.getWidth() - blitSize[1])/2
     local blitY = (love.graphics.getHeight() - blitSize[2])/2
-    love.graphics.draw(canvas, blitX, blitY, 0,
-        blitSize[1]*sx/canvasWidth, blitSize[2]/canvasHeight)
+    local blitSX = blitSize[1]*sx/canvasWidth
+    local blitSY = blitSize[2]/canvasHeight
+    love.graphics.draw(canvas, blitX, blitY, 0, blitSX, blitSY)
+
+    uiOffset.x = blitX
+    uiOffset.y = blitY
+    uiOffset.sx = blitSX
+    uiOffset.sy = blitSY
 end
 
 function love.load()
-    Game.slime = Slime.new()
+    Game.slime = Slime.new({width=640, height=480})
 
     for _=1,50 do
-        local size = math.random(1, 200)
+        local size = math.random(1, 100)
         local hue = math.random()*math.pi*2
         table.insert(Game.slime.blobs, {
-            x = math.random(512 - size/4, 512 + size/4),
-            y = math.random(512 - size, 512 - size/4),
+            x = math.random(320 - size/4, 320 + size/4),
+            y = math.random(240 - size, 240 - size/4),
             size = size,
             vx = 0,
             vy = 0,
@@ -66,11 +79,16 @@ end
 function love.update(dt)
     Game.slime:update(dt)
 
-    Game.mouseOver = Game.slime:atPosition(love.mouse.getPosition())
+    mx, my = love.mouse.getPosition()
+    mx = (mx - uiOffset.x)/uiOffset.sx
+    my = (my - uiOffset.y)/uiOffset.sy
+
+    Game.mouseOver = Game.slime:atPosition(mx, my)
 end
 
 function love.draw()
     local slimeCanvas = Game.slime:draw(background, Game.mouseOver)
+
 
     canvas:renderTo(function()
         love.graphics.setColor(255,255,255)
@@ -84,6 +102,9 @@ function love.draw()
 
         love.graphics.setColor(255,255,255)
         love.graphics.draw(slimeCanvas)
+
+        -- mouse cursor
+        love.graphics.circle("fill", mx, my, 10)
     end)
 
     blitCanvas(canvas)
