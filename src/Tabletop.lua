@@ -76,4 +76,7 @@ function Tabletop:draw()
     return self.canvasFront, self.canvasBack
 end
 
+function Tabletop:atPosition()
+end
+
 return Tabletop

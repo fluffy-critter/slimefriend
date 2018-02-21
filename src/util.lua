@@ -1,7 +1,7 @@
 --[[
-Refactor
+slimefriend!
 
-(c)2017 fluffy @ beesbuzz.biz. Please see the LICENSE file for license information.
+(c)2018 fluffy @ beesbuzz.biz. Please see the LICENSE file for license information.
 
 Useful utility functions
 

@@ -6,7 +6,7 @@
 
 setmetatable(_G, {
     __newindex = function(_, name, _)
-        error("attempted to write to gverbal variable " .. name, 2)
+        error("attempted to write to global variable " .. name, 2)
     end
 })
 
@@ -18,6 +18,7 @@ local Sprites = require('Sprites')
 local Tabletop = require('Tabletop')
 
 local Game = {}
+local mouse = {}
 
 local uiOffset = {
     x = 0, y = 0, sx = 1, sy = 1
@@ -57,7 +58,7 @@ function love.load()
     for _=1,50 do
         local size = math.random(1, 100)
         local hue = math.random()*math.pi*2
-        table.insert(Game.slime.blobs, {
+        Game.slime:addBlob({
             x = math.random(320 - size/4, 320 + size/4),
             y = math.random(240 - size, 240 - size/4),
             size = size,
@@ -77,7 +78,7 @@ function love.load()
 
     Game.tabletop = Tabletop.new()
 
-    for _,item in pairs(Game.emoji.objects) do
+    for _,item in pairs(Game.emoji.entrees) do
         table.insert(Game.tabletop.objects, {
             sprite = item,
             size = 16,
@@ -92,15 +93,66 @@ function love.load()
     Game.objects = {}
 end
 
+local function uiPos(x, y)
+    return (x - uiOffset.x)/uiOffset.sx, (y - uiOffset.y)/uiOffset.sy
+end
+
+
 function love.update(dt)
     Game.slime:update(dt)
     Game.tabletop:update(dt)
 
-    mx, my = love.mouse.getPosition()
-    mx = (mx - uiOffset.x)/uiOffset.sx
-    my = (my - uiOffset.y)/uiOffset.sy
+    local x, y = uiPos(love.mouse.getPosition())
+    mouse.x, mouse.y = x, y
 
-    Game.mouseOver = Game.slime:atPosition(mx, my)
+    if mouse.pressed and mouse.activeObject and mouse.activeObject.onDragMove then
+        mouse.activeObject:onDragMove(x + mouse.offsetX, y + mouse.offsetY)
+    end
+
+    local prevHover = mouse.hoverObject
+    mouse.hoverObject = Game.tabletop:atPosition(x, y) or Game.slime:atPosition(x, y)
+    if prevHover ~= mouse.hoverObject then
+        if prevHover and prevHover.onMouseOut then
+            prevHover:onMouseOut(x, y)
+        end
+        if mouse.hoverObject and mouse.hoverObject.onMouseOver then
+            mouse.hoverObject:onMouseOver(x, y)
+        end
+        print(prevHover, mouse.hoverObject)
+    end
+end
+
+function love.mousepressed(x, y, button)
+    x, y = uiPos(x, y)
+
+    mouse.pressed = button == 1
+
+    if button == 1 and mouse.hoverObject then
+        if mouse.hoverObject.onMouseDown then
+            mouse.offsetX = mouse.hoverObject.x - x
+            mouse.offsetY = mouse.hoverObject.y - y
+
+            mouse.hoverObject:onMouseDown(x + mouse.offsetX, y + mouse.offsetY)
+        end
+        mouse.activeObject = mouse.hoverObject
+    end
+end
+
+function love.mousereleased(x, y, button)
+    x, y = uiPos(x, y)
+
+    mouse.prssed = button == 1
+
+    if button == 1 then
+        if mouse.activeObject and mouse.activeObject.onMouseUp then
+            mouse.activeObject:onMouseUp(x + mouse.offsetX, y + mouse.offsetY)
+            mouse.offsetX, mouse.offsetY = nil, nil
+        end
+        if mouse.hoverObject and mouse.hoverObject.onMouseDrop then
+            mouse.hoverObject:onMouseDrop(x, y, mouse.activeObject)
+        end
+        mouse.activeObject = nil
+    end
 end
 
 function love.draw()
@@ -112,7 +164,9 @@ function love.draw()
         love.graphics.setColor(255,255,255)
 
         -- mouse cursor
-        love.graphics.circle("fill", mx, my, 10)
+        if mouse.x and mouse.y then
+            love.graphics.circle("fill", mouse.x, mouse.y, 10)
+        end
 
         love.graphics.draw(tableBack)
     end)
