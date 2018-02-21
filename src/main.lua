@@ -164,8 +164,8 @@ function love.draw()
         love.graphics.setColor(255,255,255)
 
         -- mouse cursor
-        if mx and my then
-            love.graphics.circle("fill", mx, my, 10)
+        if mouse.x and mouse.y then
+            love.graphics.circle("fill", mouse.x, mouse.y, 10)
         end
 
         love.graphics.draw(tableBack)

@@ -62,6 +62,7 @@ function Slime.Blob:onMouseOut()
 end
 
 function Slime.Blob:onMouseDown(x, y)
+    self.pressed = true
     self.pinX = x
     self.pinY = y
 end
@@ -72,6 +73,7 @@ function Slime.Blob:onDragMove(x, y)
 end
 
 function Slime.Blob:onMouseUp()
+    self.pressed = false
     self.pinX = nil
     self.pinY = nil
 end
@@ -160,11 +162,12 @@ function Slime:update(dt)
             blob.vy = blob.vy - (blob.y - blob.size)
         end
 
+        -- x' = x + vt + .5att, solve for a
         if blob.pinX then
-            blob.vx = blob.vx + (blob.pinX - blob.x)*.5
+            blob.ax = (blob.pinX - blob.x - blob.vx*0.1)/0.05
         end
         if blob.pinY then
-            blob.vy = blob.vy + (blob.pinY - blob.y)*.5
+            blob.ay = (blob.pinY - blob.y - blob.vy*0.1)/0.05
         end
 
         blob.x = blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
@@ -233,11 +236,13 @@ function Slime:atPosition(x, y)
     local nearest, distance
 
     for _,blob in ipairs(self.blobs) do
-        local dx, dy = x - blob.x, y - blob.y
-        local dd2 = dx*dx + dy*dy
-        if dd2 < blob.size*blob.size/2 and (not distance or dd2/blob.size < distance) then
-            nearest = blob
-            distance = dd2/blob.size
+        if not blob.pressed then
+            local dx, dy = x - blob.x, y - blob.y
+            local dd2 = dx*dx + dy*dy
+            if dd2 < blob.size*blob.size/2 and (not distance or dd2/blob.size < distance) then
+                nearest = blob
+                distance = dd2/blob.size
+            end
         end
     end
 
