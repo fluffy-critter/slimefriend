@@ -13,7 +13,8 @@ setmetatable(_G, {
 local DEBUG = false
 
 local gfx = require('gfx')
-local Slime = require('slime')
+local Slime = require('Slime')
+local Sprites = require('Sprites')
 
 local Game = {}
 
@@ -54,7 +55,8 @@ local function blitCanvas(canvas, aspect)
 end
 
 function love.load()
-    Game.slime = Slime.new({width=640, height=480})
+    Game.slime = Slime.new({width=640, height=480, yBottom=360})
+    Game.emoji = Sprites.loadFolder('emoji')
 
     for _=1,50 do
         local size = math.random(1, 100)
@@ -108,4 +110,6 @@ function love.draw()
     end)
 
     blitCanvas(canvas)
+
+    love.graphics.print('🍔', 0, 0)
 end

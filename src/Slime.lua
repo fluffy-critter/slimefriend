@@ -22,7 +22,8 @@ function Slime.new(o)
         blobs = {},
         gravity = 250,
         friction = 0.5,
-        transfer = 0.01
+        transfer = 0.01,
+        yBottom = 768
     })
 
     local fpFormat = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f")
@@ -104,7 +105,7 @@ function Slime:update(dt)
             blob.vx = blob.vx - (blob.x - blob.size)
         end
 
-        local yBottom = math.min(self.height, blob.x*(self.width - blob.x)/self.width + self.height/2)
+        local yBottom = math.min(self.height, self.yBottom + blob.x*(self.width - blob.x)/self.width - self.width/4)
         local depth = blob.y + blob.size - yBottom
         if depth > 0 then
             local nx = blob.x/(self.width/2) - 1

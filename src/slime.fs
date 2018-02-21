@@ -15,7 +15,7 @@ vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
     vec4 slimeVal = Texel(densityMap, tc);
     float density = slimeVal.r;
     if (density < 0.1) discard;
-    if (density < 0.12) return vec4(0.,0.,0.,1);
+    if (density < 0.11) return vec4(0.,0.,0.,1);
 
     vec4 localColor = Texel(slimeColor, tc)/slimeVal.g;
     localColor.a = 1.;
@@ -33,7 +33,9 @@ vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
 
     float fresnel = pow(length(nrm.xy), 50.0);
 
-    vec4 bgTexel = Texel(background, tc + refract(eye, nrm, 0.99).xy);
+    vec2 aspect = vec2(1.0, size.x/size.y);
+
+    vec4 bgTexel = Texel(background, tc + refract(eye, nrm, 0.99).xy*aspect);
     vec4 bgColor = max(vec4(0.,0.,0.,0.), mix(bgTexel, bgTexel*localColor, density*.5 + .5));
 
     float lambert = max(0., dot(nrm, lightDirNrm));
