@@ -43,5 +43,5 @@ vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
 
     float lambert = max(0., dot(nrm, lightDirNrm));
 
-    return bgColor + localColor*lambert*fresnel + specularColor*phong + reflection*fresnel*specularColor*0.3;
+    return bgColor + localColor*lambert*(fresnel + 0.1) + specularColor*phong + reflection*fresnel*specularColor*0.3;
 }
