@@ -61,6 +61,11 @@ function Slime.Blob:onMouseOut()
     print(self, self.hover)
 end
 
+function Slime.Blob:onMouseDown(x, y)
+    self.pinX = x
+    self.pinY = y
+end
+
 function Slime.Blob:onDragMove(x, y)
     self.pinX = x
     self.pinY = y
@@ -155,8 +160,15 @@ function Slime:update(dt)
             blob.vy = blob.vy - (blob.y - blob.size)
         end
 
-        blob.x = blob.pinX or blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
-        blob.y = blob.pinY or blob.y + (blob.vy + 0.5*blob.ay*dt)*dt
+        if blob.pinX then
+            blob.vx = blob.vx + (blob.pinX - blob.x)*.5
+        end
+        if blob.pinY then
+            blob.vy = blob.vy + (blob.pinY - blob.y)*.5
+        end
+
+        blob.x = blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
+        blob.y = blob.y + (blob.vy + 0.5*blob.ay*dt)*dt
 
         blob.vx = blob.vx*friction + blob.ax*dt
         blob.vy = blob.vy*friction + blob.ay*dt
@@ -180,7 +192,7 @@ function Slime:draw(background, foreground)
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(self.blobs) do
             local r, g, b = unpack(blob.color)
-            if blob.hovoer then
+            if blob.hover then
                 r = r + 128
                 g = g + 128
                 b = b + 128

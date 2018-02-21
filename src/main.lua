@@ -58,7 +58,7 @@ function love.load()
     for _=1,50 do
         local size = math.random(1, 100)
         local hue = math.random()*math.pi*2
-        table.insert(Game.slime.blobs, {
+        Game.slime:addBlob({
             x = math.random(320 - size/4, 320 + size/4),
             y = math.random(240 - size, 240 - size/4),
             size = size,
@@ -93,17 +93,16 @@ function love.load()
     Game.objects = {}
 end
 
-function love.update(dt)
-    Game.slime:update(dt)
-    Game.tabletop:update(dt)
-end
-
-local function mousePos(x, y)
+local function uiPos(x, y)
     return (x - uiOffset.x)/uiOffset.sx, (y - uiOffset.y)/uiOffset.sy
 end
 
-function love.mousemoved(x, y)
-    x, y = mousePos(x, y)
+
+function love.update(dt)
+    Game.slime:update(dt)
+    Game.tabletop:update(dt)
+
+    local x, y = uiPos(love.mouse.getPosition())
     mouse.x, mouse.y = x, y
 
     if mouse.pressed and mouse.activeObject and mouse.activeObject.onDragMove then
@@ -119,31 +118,35 @@ function love.mousemoved(x, y)
         if mouse.hoverObject and mouse.hoverObject.onMouseOver then
             mouse.hoverObject:onMouseOver(x, y)
         end
+        print(prevHover, mouse.hoverObject)
     end
 end
 
 function love.mousepressed(x, y, button)
-    x, y = mousePos(x, y)
+    x, y = uiPos(x, y)
 
     mouse.pressed = button == 1
 
     if button == 1 and mouse.hoverObject then
         if mouse.hoverObject.onMouseDown then
-            mouse.offsetX =
-            mouse.hoverObject:onMouseDown(x, y)
+            mouse.offsetX = mouse.hoverObject.x - x
+            mouse.offsetY = mouse.hoverObject.y - y
+
+            mouse.hoverObject:onMouseDown(x + mouse.offsetX, y + mouse.offsetY)
         end
         mouse.activeObject = mouse.hoverObject
     end
 end
 
 function love.mousereleased(x, y, button)
-    x, y = mousePos(x, y)
+    x, y = uiPos(x, y)
 
     mouse.prssed = button == 1
 
     if button == 1 then
         if mouse.activeObject and mouse.activeObject.onMouseUp then
-            mouse.activeObject:onMouseUp(x, y)
+            mouse.activeObject:onMouseUp(x + mouse.offsetX, y + mouse.offsetY)
+            mouse.offsetX, mouse.offsetY = nil, nil
         end
         if mouse.hoverObject and mouse.hoverObject.onMouseDrop then
             mouse.hoverObject:onMouseDrop(x, y, mouse.activeObject)
