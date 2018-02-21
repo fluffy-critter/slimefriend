@@ -11,6 +11,7 @@ local Slime = {}
 local gfx = require('gfx')
 local util = require('util')
 local config = require('config')
+local UI = require('UI')
 
 function Slime.new(o)
     local self = o or {}
@@ -30,7 +31,8 @@ function Slime.new(o)
 
     self.densityMap = love.graphics.newCanvas(self.width, self.height, fpFormat)
     self.colorMap = love.graphics.newCanvas(self.width, self.height, fpFormat)
-    self.canvas = love.graphics.newCanvas(self.width, self.height, gfx.selectCanvasFormat("rgba8", "rgb10a2", "rgb5a1", "rgba4"))
+    self.canvas = love.graphics.newCanvas(self.width, self.height,
+        gfx.selectCanvasFormat("rgba8", "rgb10a2", "rgb5a1", "rgba4"))
 
     self.shader = love.graphics.newShader("slime.fs")
 
@@ -45,6 +47,33 @@ function Slime.new(o)
 
     setmetatable(self, {__index=Slime})
     return self
+end
+
+Slime.Blob = {}
+
+function Slime.Blob:onMouseOver()
+    self.hover = true
+    print(self, self.hover)
+end
+
+function Slime.Blob:onMouseOut()
+    self.hover = false
+    print(self, self.hover)
+end
+
+function Slime.Blob:onDragMove(x, y)
+    self.pinX = x
+    self.pinY = y
+end
+
+function Slime.Blob:onMouseUp()
+    self.pinX = nil
+    self.pinY = nil
+end
+
+function Slime:addBlob(blob)
+    setmetatable(blob, {__index=Slime.Blob})
+    table.insert(self.blobs, blob)
 end
 
 function Slime:update(dt)
@@ -71,16 +100,13 @@ function Slime:update(dt)
             -- expected distance
             local ed = math.min(ba.size, bb.size)/2
 
+            local mass = ba.size + bb.size
+            local fx, fy
             if dd < ed then
                 -- repulsive force
-                local mass = ba.size + bb.size
-                local fx = dx*ed/dd
-                local fy = dy*ed/dd
-                ba.ax = ba.ax - fx*bb.size/mass
-                ba.ay = ba.ay - fy*bb.size/mass
-
-                bb.ax = bb.ax + fx*ba.size/mass
-                bb.ay = bb.ay + fy*ba.size/mass
+                mass = ba.size + bb.size
+                fx = dx*ed/dd
+                fy = dy*ed/dd
 
                 local flow = {
                     ba = ba,
@@ -88,7 +114,17 @@ function Slime:update(dt)
                     delta = (bb.size - ba.size)*transferRate
                 }
                 table.insert(flows, flow)
+            else
+                -- attractive force
+                fx = -dx/dd2
+                fy = -dy/dd2
             end
+
+            ba.ax = ba.ax - fx*bb.size/mass
+            ba.ay = ba.ay - fy*bb.size/mass
+
+            bb.ax = bb.ax + fx*ba.size/mass
+            bb.ay = bb.ay + fy*ba.size/mass
         end
     end
 
@@ -119,8 +155,8 @@ function Slime:update(dt)
             blob.vy = blob.vy - (blob.y - blob.size)
         end
 
-        blob.x = blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
-        blob.y = blob.y + (blob.vy + 0.5*blob.ay*dt)*dt
+        blob.x = blob.pinX or blob.x + (blob.vx + 0.5*blob.ax*dt)*dt
+        blob.y = blob.pinY or blob.y + (blob.vy + 0.5*blob.ay*dt)*dt
 
         blob.vx = blob.vx*friction + blob.ax*dt
         blob.vy = blob.vy*friction + blob.ay*dt
@@ -143,7 +179,13 @@ function Slime:draw(background, foreground)
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(self.blobs) do
-            love.graphics.setColor(unpack(blob.color))
+            local r, g, b = unpack(blob.color)
+            if blob.hovoer then
+                r = r + 128
+                g = g + 128
+                b = b + 128
+            end
+            love.graphics.setColor(r, g, b)
             love.graphics.draw(self.sprite, self.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
