@@ -316,6 +316,17 @@ function util.spairs(t, order)
     end
 end
 
+-- Reverse ipairs
+function util.rpairs(t)
+    local i = #t + 1
+    return function()
+        i = i - 1
+        if t[i] then
+            return i, t[i]
+        end
+    end
+end
+
 -- Shallow copy a table
 function util.shallowCopy(tbl)
     if type(tbl) ~= "table" then

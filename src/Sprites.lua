@@ -26,7 +26,6 @@ function Sprites.loadFolder(dir)
     local files = love.filesystem.getDirectoryItems(dir)
     for _,name in ipairs(files) do
         local fullPath = dir .. '/' .. name
-        print(fullPath)
         if love.filesystem.isDirectory(fullPath) then
             collection[name] = Sprites.loadFolder(fullPath)
         elseif isValidExt(name) then

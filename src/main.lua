@@ -15,13 +15,9 @@ local DEBUG = false
 local gfx = require('gfx')
 local Slime = require('Slime')
 local Sprites = require('Sprites')
+local Tabletop = require('Tabletop')
 
 local Game = {}
-
-local canvas = love.graphics.newCanvas(640, 480)
-canvas:setFilter("nearest")
-
-local background
 
 local uiOffset = {
     x = 0, y = 0, sx = 1, sy = 1
@@ -75,7 +71,25 @@ function love.load()
         })
     end
 
-    background = love.graphics.newImage('background.png')
+    Game.layers = {}
+    Game.layers.background = love.graphics.newImage('background.png')
+    Game.layers.reflection = love.graphics.newCanvas(640, 480)
+
+    Game.tabletop = Tabletop.new()
+
+    for _,item in pairs(Game.emoji.objects) do
+        table.insert(Game.tabletop.objects, {
+            sprite = item,
+            size = 16,
+            x = math.random(160, 320 + 160),
+            y = math.random(335, 370)
+        })
+    end
+
+    Game.canvas = love.graphics.newCanvas(640, 480)
+    Game.canvas:setFilter("nearest")
+
+    Game.objects = {}
 end
 
 function love.update(dt)
@@ -89,12 +103,25 @@ function love.update(dt)
 end
 
 function love.draw()
-    local slimeCanvas = Game.slime:draw(background, Game.mouseOver)
+    local tableFront, tableBack = Game.tabletop:draw()
 
-
-    canvas:renderTo(function()
+    Game.layers.reflection:renderTo(function()
+        love.graphics.setBlendMode("alpha")
+        love.graphics.clear(0,0,0,0)
         love.graphics.setColor(255,255,255)
-        love.graphics.draw(background)
+
+        -- mouse cursor
+        love.graphics.circle("fill", mx, my, 10)
+
+        love.graphics.draw(tableBack)
+    end)
+
+    local slimeCanvas = Game.slime:draw(Game.layers.background, Game.layers.reflection)
+
+    Game.canvas:renderTo(function()
+        love.graphics.setBlendMode("alpha", "premultiplied")
+        love.graphics.setColor(255,255,255)
+        love.graphics.draw(Game.layers.background)
 
         love.graphics.setColor(0,0,0)
         love.graphics.draw(slimeCanvas, -1, -1)
@@ -105,11 +132,10 @@ function love.draw()
         love.graphics.setColor(255,255,255)
         love.graphics.draw(slimeCanvas)
 
-        -- mouse cursor
-        love.graphics.circle("fill", mx, my, 10)
+        love.graphics.draw(tableFront)
     end)
 
-    blitCanvas(canvas)
+    blitCanvas(Game.canvas)
 
     love.graphics.print('🍔', 0, 0)
 end

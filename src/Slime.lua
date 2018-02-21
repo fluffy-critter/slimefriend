@@ -127,7 +127,7 @@ function Slime:update(dt)
     end
 end
 
-function Slime:draw(background, mouseOver)
+function Slime:draw(background, foreground)
     self.densityMap:renderTo(function()
         love.graphics.clear(0,0,0,0)
 
@@ -143,11 +143,7 @@ function Slime:draw(background, mouseOver)
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(self.blobs) do
-            if blob == mouseOver then
-                love.graphics.setColor(25500,25500,25500,25500)
-            else
-                love.graphics.setColor(unpack(blob.color))
-            end
+            love.graphics.setColor(unpack(blob.color))
             love.graphics.draw(self.sprite, self.quad, blob.x, blob.y, 0, blob.size, blob.size, 1, 1)
         end
     end)
@@ -158,9 +154,10 @@ function Slime:draw(background, mouseOver)
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.setShader(self.shader)
         love.graphics.setColor(255,255,255)
-        self.shader:send("lightDir", {-1, -1, 1})
+        self.shader:send("lightDir", {-10, -10, 1})
         self.shader:send("densityMap", self.densityMap)
         self.shader:send("background", background)
+        self.shader:send("foreground", foreground)
         self.shader:send("size", {self.densityMap:getDimensions()})
         self.shader:send("slimeColor", self.colorMap)
         self.shader:send("specularColor", {1,1,1,1})
