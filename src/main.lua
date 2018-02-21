@@ -81,8 +81,8 @@ function love.load()
         table.insert(Game.tabletop.objects, {
             sprite = item,
             size = 16,
-            x = math.random(160, 320 + 160),
-            y = math.random(335, 370)
+            x = math.random(320 - 80, 320 + 80),
+            y = math.random(335, 420)
         })
     end
 
@@ -94,6 +94,7 @@ end
 
 function love.update(dt)
     Game.slime:update(dt)
+    Game.tabletop:update(dt)
 
     mx, my = love.mouse.getPosition()
     mx = (mx - uiOffset.x)/uiOffset.sx
@@ -136,6 +137,4 @@ function love.draw()
     end)
 
     blitCanvas(Game.canvas)
-
-    love.graphics.print('🍔', 0, 0)
 end

@@ -32,10 +32,19 @@ function Tabletop.new(o)
     return self
 end
 
+function Tabletop:update(dt)
+    for _,item in ipairs(self.objects) do
+        if not item.depth then
+            item.depth = item.y - self.cy
+            item.y = 0
+        end
+    end
+end
+
 function Tabletop:draw()
     -- sort the objects front to back
     table.sort(self.objects, function(a,b)
-        return a.y < b.y
+        return a.depth < b.depth
     end)
 
     -- draw the front-side buffer (player's view)
@@ -46,7 +55,8 @@ function Tabletop:draw()
         love.graphics.draw(self.bg)
 
         for _,item in ipairs(self.objects) do
-            love.graphics.draw(item.sprite, Sprites.quad, item.x, item.y, item.r, item.size, item.size, 1, 1)
+            local y = self.cy + item.depth + item.y
+            love.graphics.draw(item.sprite, Sprites.quad, item.x, y, item.r, item.size, item.size, 1, 1)
         end
     end)
 
@@ -58,7 +68,8 @@ function Tabletop:draw()
         love.graphics.draw(self.bg)
 
         for _,item in util.rpairs(self.objects) do
-            love.graphics.draw(item.sprite, Sprites.quad, item.x, item.y, item.r, item.size, item.size, 1, 1)
+            local y = self.cy - item.depth + item.y
+            love.graphics.draw(item.sprite, Sprites.quad, item.x, y, item.r, item.size, item.size, 1, 1)
         end
     end)
 
