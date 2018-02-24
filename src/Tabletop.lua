@@ -71,6 +71,12 @@ function Tabletop:addItem(item)
     item.tableTop = self
 end
 
+function Tabletop:removeItem(item)
+    util.runQueue(self.items, function(ii)
+        return ii == item
+    end)
+end
+
 function Tabletop:update(dt)
     for _,item in ipairs(self.items) do
         if not item.depth then
@@ -79,8 +85,9 @@ function Tabletop:update(dt)
     end
 end
 
-local function drawItem(sprite, x, y, r, size)
-    love.graphics.draw(sprite, Sprites.quad, x, y, r, size, size, 1, 1)
+local function drawItem(item, x, y)
+    love.graphics.draw(item.sprite.image, Sprites.quad, x, y, item.r,
+        item.size, item.size, 1, 1)
 end
 
 function Tabletop:draw()
@@ -102,14 +109,14 @@ function Tabletop:draw()
 
             if item.hover or item.pressed then
                 love.graphics.setShader(self.hoverShader)
-                drawItem(item.sprite, item.x, y - 1, item.r, item.size)
-                drawItem(item.sprite, item.x, y + 1, item.r, item.size)
-                drawItem(item.sprite, item.x - 1, y, item.r, item.size)
-                drawItem(item.sprite, item.x + 1, y, item.r, item.size)
+                drawItem(item, item.x, y - 1)
+                drawItem(item, item.x, y + 1)
+                drawItem(item, item.x - 1, y)
+                drawItem(item, item.x + 1, y)
                 love.graphics.setShader()
             end
 
-            drawItem(item.sprite, item.x, y, item.r, item.size)
+            drawItem(item, item.x, y)
         end
     end)
 
@@ -122,7 +129,7 @@ function Tabletop:draw()
 
         for _,item in util.rpairs(self.items) do
             local y = item.y - 2*item.depth
-            love.graphics.draw(item.sprite, Sprites.quad, item.x, y, item.r, item.size, item.size, 1, 1)
+            drawItem(item, item.x, y)
         end
     end)
 

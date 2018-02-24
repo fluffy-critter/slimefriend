@@ -7,7 +7,8 @@ sprite stuff
 ]]
 
 local Sprites = {
-    quad = love.graphics.newQuad(0, 0, 2, 2, 2, 2)
+    quad = love.graphics.newQuad(0, 0, 2, 2, 2, 2),
+    all = {}
 }
 
 local extensions = {
@@ -27,9 +28,15 @@ function Sprites.loadFolder(dir)
     for _,name in ipairs(files) do
         local fullPath = dir .. '/' .. name
         if love.filesystem.isDirectory(fullPath) then
-            collection[name] = Sprites.loadFolder(fullPath)
+            collection[name] = Sprites.loadFolder(fullPath, name)
         elseif isValidExt(name) then
-            collection[name] = love.graphics.newImage(fullPath)
+            local item = {
+                image = love.graphics.newImage(fullPath),
+                name = name,
+                collection = collection
+            }
+            collection[name] = item
+            Sprites.all[fullPath] = item
         end
     end
 

@@ -60,9 +60,13 @@ function Slime.Blob:onMouseOut()
 end
 
 function Slime.Blob:onMouseDown(x, y)
-    self.pressed = true
-    self.pinX = x
-    self.pinY = y
+    local grabbed = false
+
+    if grabbed then
+        self.pinX = x
+        self.pinY = y
+        self.pressed = true
+    end
 end
 
 function Slime.Blob:onDragMove(x, y)
@@ -74,6 +78,11 @@ function Slime.Blob:onMouseUp()
     self.pressed = false
     self.pinX = nil
     self.pinY = nil
+end
+
+function Slime.Blob:onMouseDrop(_, _, item)
+    print("slurp slurp", item)
+    item.tableTop:removeItem(item)
 end
 
 function Slime:addBlob(blob)

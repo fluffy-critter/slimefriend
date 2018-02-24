@@ -75,12 +75,12 @@ function love.load()
 
     Game.tabletop = Tabletop.new()
 
-    for _,item in pairs(Game.emoji.entrees) do
+    for _,sprite in pairs(Game.emoji.entrees) do
         local size = 16
         local x = math.random()*2 - 1
         local y = (math.random()*2 - 1)*math.sqrt(1 - x*x)
         Game.tabletop:addItem({
-            sprite = item,
+            sprite = sprite,
             size = size,
             x = Game.tabletop.cx + x*(Game.tabletop.rx - size),
             y = Game.tabletop.cy + y*(Game.tabletop.ry) - size
@@ -118,7 +118,6 @@ function love.update(dt)
         if mouse.hoverObject and mouse.hoverObject.onMouseOver then
             mouse.hoverObject:onMouseOver(x, y)
         end
-        print(prevHover, mouse.hoverObject)
     end
 end
 
@@ -137,6 +136,7 @@ function love.mousepressed(x, y, button)
         end
         if grab then
             mouse.activeObject = mouse.hoverObject
+            mouse.hoverObject = nil
         end
     end
 end
@@ -151,7 +151,7 @@ function love.mousereleased(x, y, button)
             mouse.activeObject:onMouseUp(x + mouse.offsetX, y + mouse.offsetY)
             mouse.offsetX, mouse.offsetY = nil, nil
         end
-        if mouse.hoverObject and mouse.hoverObject.onMouseDrop then
+        if mouse.activeObject and mouse.hoverObject and mouse.hoverObject.onMouseDrop then
             mouse.hoverObject:onMouseDrop(x, y, mouse.activeObject)
         end
         mouse.activeObject = nil
