@@ -53,12 +53,10 @@ Slime.Blob = {}
 
 function Slime.Blob:onMouseOver()
     self.hover = true
-    print(self, self.hover)
 end
 
 function Slime.Blob:onMouseOut()
     self.hover = false
-    print(self, self.hover)
 end
 
 function Slime.Blob:onMouseDown(x, y)

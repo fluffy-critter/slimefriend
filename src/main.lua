@@ -55,12 +55,12 @@ function love.load()
     Game.slime = Slime.new({width=640, height=480, yBottom=360})
     Game.emoji = Sprites.loadFolder('emoji')
 
-    for _=1,50 do
-        local size = math.random(1, 100)
+    for _=1,4 do
+        local size = math.random(50, 100)
         local hue = math.random()*math.pi*2
         Game.slime:addBlob({
             x = math.random(320 - size/4, 320 + size/4),
-            y = math.random(240 - size, 240 - size/4),
+            y = math.random(360 - size, 400 - size),
             size = size,
             vx = 0,
             vy = 0,
@@ -79,7 +79,7 @@ function love.load()
     Game.tabletop = Tabletop.new()
 
     for _,item in pairs(Game.emoji.entrees) do
-        table.insert(Game.tabletop.objects, {
+        Game.tabletop:addItem({
             sprite = item,
             size = 16,
             x = math.random(320 - 80, 320 + 80),
@@ -128,13 +128,16 @@ function love.mousepressed(x, y, button)
     mouse.pressed = button == 1
 
     if button == 1 and mouse.hoverObject then
+        local grab = true
         if mouse.hoverObject.onMouseDown then
             mouse.offsetX = mouse.hoverObject.x - x
             mouse.offsetY = mouse.hoverObject.y - y
 
-            mouse.hoverObject:onMouseDown(x + mouse.offsetX, y + mouse.offsetY)
+            grab = mouse.hoverObject:onMouseDown(x + mouse.offsetX, y + mouse.offsetY)
         end
-        mouse.activeObject = mouse.hoverObject
+        if grab then
+            mouse.activeObject = mouse.hoverObject
+        end
     end
 end
 
@@ -163,12 +166,13 @@ function love.draw()
         love.graphics.clear(0,0,0,0)
         love.graphics.setColor(255,255,255)
 
+        love.graphics.draw(tableBack)
+
         -- mouse cursor
         if mouse.x and mouse.y then
             love.graphics.circle("fill", mouse.x, mouse.y, 10)
         end
 
-        love.graphics.draw(tableBack)
     end)
 
     local slimeCanvas = Game.slime:draw(Game.layers.background, Game.layers.reflection)

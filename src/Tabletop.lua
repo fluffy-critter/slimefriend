@@ -18,7 +18,7 @@ function Tabletop.new(o)
     util.applyDefaults(self, {
         width = 640,
         height = 480,
-        objects = {},
+        items = {},
         cx = 320,
         cy = 370,
         rx = 192,
@@ -29,21 +29,42 @@ function Tabletop.new(o)
     self.canvasFront = love.graphics.newCanvas(self.width, self.height)
     self.canvasBack = love.graphics.newCanvas(self.width, self.height)
 
+    self.hoverShader = love.graphics.newShader("hover.fs")
+
     return self
 end
 
+Tabletop.Item = {}
+
+function Tabletop.Item:onMouseOver()
+    self.hover = true
+end
+
+function Tabletop.Item:onMouseOut()
+    self.hover = false
+end
+
+function Tabletop:addItem(item)
+    setmetatable(item, {__index = Tabletop.Item})
+
+    table.insert(self.items, item)
+end
+
 function Tabletop:update(dt)
-    for _,item in ipairs(self.objects) do
+    for _,item in ipairs(self.items) do
         if not item.depth then
             item.depth = item.y - self.cy
-            item.y = 0
         end
     end
 end
 
+local function drawItem(sprite, x, y, r, size)
+    love.graphics.draw(sprite, Sprites.quad, x, y, r, size, size, 1, 1)
+end
+
 function Tabletop:draw()
-    -- sort the objects front to back
-    table.sort(self.objects, function(a,b)
+    -- sort the items front to back
+    table.sort(self.items, function(a,b)
         return a.depth < b.depth
     end)
 
@@ -54,9 +75,20 @@ function Tabletop:draw()
 
         love.graphics.draw(self.bg)
 
-        for _,item in ipairs(self.objects) do
-            local y = self.cy + item.depth + item.y
-            love.graphics.draw(item.sprite, Sprites.quad, item.x, y, item.r, item.size, item.size, 1, 1)
+        for _,item in ipairs(self.items) do
+
+            local y = item.y
+
+            if item.hover then
+                love.graphics.setShader(self.hoverShader)
+                drawItem(item.sprite, item.x, y - 1, item.r, item.size)
+                drawItem(item.sprite, item.x, y + 1, item.r, item.size)
+                drawItem(item.sprite, item.x - 1, y, item.r, item.size)
+                drawItem(item.sprite, item.x + 1, y, item.r, item.size)
+                love.graphics.setShader()
+            end
+
+            drawItem(item.sprite, item.x, y, item.r, item.size)
         end
     end)
 
@@ -67,8 +99,8 @@ function Tabletop:draw()
 
         love.graphics.draw(self.bg)
 
-        for _,item in util.rpairs(self.objects) do
-            local y = self.cy - item.depth + item.y
+        for _,item in util.rpairs(self.items) do
+            local y = item.y - 2*item.depth
             love.graphics.draw(item.sprite, Sprites.quad, item.x, y, item.r, item.size, item.size, 1, 1)
         end
     end)
@@ -76,7 +108,20 @@ function Tabletop:draw()
     return self.canvasFront, self.canvasBack
 end
 
-function Tabletop:atPosition()
+function Tabletop:atPosition(x, y)
+    local nearest
+
+    for _,item in ipairs(self.items) do
+        if not item.pressed then
+            local dx, dy = x - item.x, y - item.y
+            local dd2 = dx*dx + dy*dy
+            if dd2 < item.size*item.size then
+                nearest = item
+            end
+        end
+    end
+
+    return nearest
 end
 
 return Tabletop
