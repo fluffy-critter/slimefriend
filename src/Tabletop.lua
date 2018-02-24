@@ -8,7 +8,7 @@ stuff on the table
 
 local Tabletop = {}
 
-local Sprites = require('sprites')
+local Sprites = require('Sprites')
 local util = require('util')
 
 function Tabletop.new(o)
@@ -77,12 +77,14 @@ function Tabletop:removeItem(item)
     end)
 end
 
-function Tabletop:update(dt)
+function Tabletop:update()
     for _,item in ipairs(self.items) do
         if not item.depth then
             item.depth = item.y - self.cy
         end
     end
+
+    -- TODO drop falling objects, wiggle held object
 end
 
 local function drawItem(item, x, y)

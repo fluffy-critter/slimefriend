@@ -1,7 +1,7 @@
 # ugh this is such a mess, maybe I should use cmake or scons or something
 
 # itch.io target
-TARGET=fluffy/Slimefriend
+TARGET=fluffy/slimefriend
 
 # game directory
 SRC=src
@@ -20,7 +20,7 @@ BUNDLE_ID=biz.beesbuzz.Slimefriend
 LOVE_VERSION=0.10.2
 
 # Version of the game - whenever this changes, set a tag for v$(BASEVERSION) for the revision base
-BASEVERSION=0.0
+BASEVERSION=0.1
 
 # Determine the full version string based on the tag
 COMMITHASH=$(shell git rev-parse --short HEAD)
@@ -80,7 +80,7 @@ tests:
 	@which love 1>/dev/null || (echo \
 		"love (https://love2d.org/) must be on the path to run the unit tests" \
 		&& false )
-	love $(SRC) --cute-headless
+	#love $(SRC) --cute-headless (TODO)
 
 checks:
 	@which luacheck 1>/dev/null || (echo \

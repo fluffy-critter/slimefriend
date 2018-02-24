@@ -10,9 +10,6 @@ setmetatable(_G, {
     end
 })
 
-local DEBUG = false
-
-local gfx = require('gfx')
 local Slime = require('Slime')
 local Sprites = require('Sprites')
 local Tabletop = require('Tabletop')
@@ -23,8 +20,6 @@ local mouse = {}
 local uiOffset = {
     x = 0, y = 0, sx = 1, sy = 1
 }
-
-local mx, my
 
 local function blitCanvas(canvas, aspect)
     local screenWidth = love.graphics.getWidth()

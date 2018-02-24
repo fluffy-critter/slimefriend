@@ -11,7 +11,6 @@ local Slime = {}
 local gfx = require('gfx')
 local util = require('util')
 local config = require('config')
-local UI = require('UI')
 
 function Slime.new(o)
     local self = o or {}
