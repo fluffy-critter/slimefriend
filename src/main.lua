@@ -57,7 +57,6 @@ function love.load()
 
     for _=1,4 do
         local size = math.random(50, 100)
-        local hue = math.random()*math.pi*2
         Game.slime:addBlob({
             x = math.random(320 - size/4, 320 + size/4),
             y = math.random(360 - size, 400 - size),
@@ -66,9 +65,7 @@ function love.load()
             vy = 0,
             ax = 0,
             ay = 0,
-            color = {128 + 128*math.cos(hue),
-                128 + 128*math.cos(hue + math.pi*2/3),
-                128 + 128*math.cos(hue - math.pi*2/3)}
+            color = {64, 64, 64}
         })
     end
 
@@ -79,11 +76,14 @@ function love.load()
     Game.tabletop = Tabletop.new()
 
     for _,item in pairs(Game.emoji.entrees) do
+        local size = 16
+        local x = math.random()*2 - 1
+        local y = (math.random()*2 - 1)*math.sqrt(1 - x*x)
         Game.tabletop:addItem({
             sprite = item,
-            size = 16,
-            x = math.random(320 - 80, 320 + 80),
-            y = math.random(335, 420)
+            size = size,
+            x = Game.tabletop.cx + x*(Game.tabletop.rx - size),
+            y = Game.tabletop.cy + y*(Game.tabletop.ry) - size
         })
     end
 

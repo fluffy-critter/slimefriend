@@ -7,7 +7,7 @@ uniform Image foreground;
 uniform vec4 specularColor;
 
 vec3 pos(vec2 tc) {
-    return vec3(tc, Texel(densityMap, tc).r*0.5);
+    return vec3(tc, sqrt(Texel(densityMap, tc).r));
 }
 
 vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
@@ -42,6 +42,8 @@ vec4 effect(vec4 color, Image txt, vec2 tc, vec2 sc) {
     vec4 reflection = Texel(foreground, tc + reflect(eye, nrm).xy*aspect);
 
     float lambert = max(0., dot(nrm, lightDirNrm));
+
+    // return vec4(nrm*.5 + .5, 1);
 
     return bgColor + localColor*lambert*(fresnel + 0.1) + specularColor*phong + reflection*fresnel*specularColor*0.3;
 }

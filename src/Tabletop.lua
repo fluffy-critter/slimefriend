@@ -44,10 +44,31 @@ function Tabletop.Item:onMouseOut()
     self.hover = false
 end
 
+function Tabletop.Item:onMouseDown(x, y)
+    self.pressed = true
+    self.tableTop.activeItem = self
+    self.x = x
+    self.y = y
+
+    return true
+end
+
+function Tabletop.Item:onDragMove(x, y)
+    self.x = x
+    self.y = y
+    self.depth = self.y - self.tableTop.cy
+end
+
+function Tabletop.Item:onMouseUp()
+    self.pressed = false
+    self.tableTop.activeItem = nil
+end
+
 function Tabletop:addItem(item)
     setmetatable(item, {__index = Tabletop.Item})
 
     table.insert(self.items, item)
+    item.tableTop = self
 end
 
 function Tabletop:update(dt)
@@ -79,7 +100,7 @@ function Tabletop:draw()
 
             local y = item.y
 
-            if item.hover then
+            if item.hover or item.pressed then
                 love.graphics.setShader(self.hoverShader)
                 drawItem(item.sprite, item.x, y - 1, item.r, item.size)
                 drawItem(item.sprite, item.x, y + 1, item.r, item.size)
@@ -109,6 +130,10 @@ function Tabletop:draw()
 end
 
 function Tabletop:atPosition(x, y)
+    if self.activeItem then
+        return nil
+    end
+
     local nearest
 
     for _,item in ipairs(self.items) do

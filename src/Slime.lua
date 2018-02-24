@@ -79,6 +79,7 @@ end
 function Slime:addBlob(blob)
     setmetatable(blob, {__index=Slime.Blob})
     table.insert(self.blobs, blob)
+    blob.slime = self
 end
 
 function Slime:update(dt)
