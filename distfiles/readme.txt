@@ -8,6 +8,6 @@ Feed your slime friend
 
 CREDITS
 
-Code and artwork by fluffy
+Code and background artwork by fluffy
 
 Thanks to EmojiOne (https://www.emojione.com/) for providing free emoji icons

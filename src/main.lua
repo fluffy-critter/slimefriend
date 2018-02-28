@@ -51,11 +51,12 @@ function love.load()
     Game.emoji = Sprites.loadFolder('emoji')
 
     for _=1,4 do
-        local size = math.random(50, 100)
+        local mass = math.random(25*25, 100*100)
+        local r = math.sqrt(mass)
         Game.slime:addBlob({
-            x = math.random(320 - size/4, 320 + size/4),
-            y = math.random(360 - size, 400 - size),
-            size = size,
+            x = math.random(320 - r/4, 320 + r/4),
+            y = math.random(360 - r, 400 - r),
+            mass = mass,
             vx = 0,
             vy = 0,
             ax = 0,
@@ -69,6 +70,35 @@ function love.load()
     Game.layers.reflection = love.graphics.newCanvas(640, 480)
 
     Game.tabletop = Tabletop.new()
+
+    Game.slime.attrs = {
+        [Game.emoji.desserts] = {
+            mass = 15,
+            amorous = 5
+        },
+        [Game.emoji.drinks] = {
+            mass = 1,
+            amorous = 10
+        },
+        [Game.emoji.entrees] = {
+            mass = 20,
+            amorous = 2
+        },
+        [Game.emoji.flowers] = {
+            mass = 2
+        },
+        [Game.emoji.fruits] = {
+            mass = 3,
+            amorous = 1
+        },
+        [Game.emoji.objects] = {
+            mass = 2,
+            amorous = -5
+        },
+        [Game.emoji.sides] = {
+            mass = 10
+        },
+    }
 
     for _,sprite in pairs(Game.emoji.entrees) do
         local size = 16
