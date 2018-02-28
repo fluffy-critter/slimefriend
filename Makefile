@@ -168,7 +168,7 @@ $(DEST)/win32/$(NAME).exe: $(WIN32_ROOT)/love.exe $(DEST)/love/$(NAME).love
 
 # Win64 version
 win64: $(WIN64_ROOT)/love.exe $(DEST)/win64/$(NAME).exe
-$(DEST)/win64/$(NAME).exe: $(WIN32_ROOT)/love.exe $(DEST)/love/$(NAME).love
+$(DEST)/win64/$(NAME).exe: $(WIN64_ROOT)/love.exe $(DEST)/love/$(NAME).love
 	echo $(@)
 	mkdir -p $(DEST)/win64
 	cp -r $(wildcard $(WIN64_ROOT)/*.dll) $(DEST)/win64
