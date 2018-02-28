@@ -257,8 +257,8 @@ function Slime:draw(background, foreground)
             local r, g, b = 0.75, 0.75, 0.75
             if blob.amorous > 0 then
                 r = r + blob.amorous
-                g = g - blob.amorous/8
-                b = b - blob.amorous/8
+                g = g - math.min(0.5, blob.amorous/8)
+                b = b - math.min(0.5, blob.amorous/6)
             else
                 r = r + blob.amorous/2
                 g = g + blob.amorous/6
