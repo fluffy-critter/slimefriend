@@ -73,30 +73,31 @@ function love.load()
 
     Game.slime.attrs = {
         [Game.emoji.desserts] = {
-            mass = 15,
+            mass = 225,
             amorous = 5
         },
         [Game.emoji.drinks] = {
-            mass = 1,
+            mass = 20,
             amorous = 10
         },
         [Game.emoji.entrees] = {
-            mass = 20,
-            amorous = 2
+            mass = 400,
+            amorous = 3
         },
         [Game.emoji.flowers] = {
-            mass = 2
+            mass = 5,
+            amorous = -1
         },
         [Game.emoji.fruits] = {
-            mass = 3,
+            mass = 15,
             amorous = 1
         },
         [Game.emoji.objects] = {
-            mass = 2,
+            mass = 10,
             amorous = -5
         },
         [Game.emoji.sides] = {
-            mass = 10
+            mass = 50
         },
     }
 

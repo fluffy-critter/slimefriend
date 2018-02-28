@@ -89,7 +89,7 @@ function Slime.Blob:onMouseUp()
     self.pinY = nil
 end
 
-function Slime.Blob:onMouseDrop(_, _, item)
+function Slime.Blob:onMouseDrop(x, y, item)
     if item.tableTop then
         print("slurp slurp", item)
         item.tableTop:removeItem(item)
@@ -105,8 +105,8 @@ function Slime.Blob:onMouseDrop(_, _, item)
     while self.mass > 10000 do
         print("mass before = " .. self.mass)
         local child = {
-            x = self.x + 0.5,
-            y = self.y,
+            x = x + math.random(),
+            y = y + math.random(),
             vx = 0,
             vy = 0,
             mass = self.mass*.25,
@@ -140,6 +140,8 @@ function Slime:update(dt)
         local va = (math.sqrt(blob.mass) - blob.r)*500
         blob.r = blob.r + dt*(blob.vr + 0.5*va*dt)
         blob.vr = blob.vr*0.75 + va*dt
+
+        blob.amorous = blob.amorous*math.pow(0.9, dt)
     end
 
     local flows = {}
@@ -170,7 +172,8 @@ function Slime:update(dt)
                 local flow = {
                     ba = ba,
                     bb = bb,
-                    delta = (bb.mass - ba.mass)*transferRate
+                    dm = (bb.mass - ba.mass)*transferRate,
+                    da = (bb.amorous - ba.amorous)*transferRate,
                 }
                 table.insert(flows, flow)
             else
@@ -188,8 +191,11 @@ function Slime:update(dt)
     end
 
     for _,f in ipairs(flows) do
-        f.ba.mass = f.ba.mass + f.delta
-        f.bb.mass = f.bb.mass - f.delta
+        f.ba.mass = f.ba.mass + f.dm
+        f.bb.mass = f.bb.mass - f.dm
+
+        f.ba.amorous = f.ba.amorous + f.da
+        f.bb.amorous = f.bb.amorous - f.da
     end
 
     for _,blob in ipairs(self.blobs) do
@@ -248,15 +254,23 @@ function Slime:draw(background, foreground)
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(self.blobs) do
-            local r = util.smoothStep(blob.amorous/10) + 0.75
-            local g = 0.75 - util.smoothStep(-blob.amorous/20)
-            local b = 0.75 - util.smoothStep(-blob.amorous/30)
-            if blob.hover then
-                r = r + 128
-                g = g + 128
-                b = b + 128
+            local r, g, b = 0.75, 0.75, 0.75
+            if blob.amorous > 0 then
+                r = r + blob.amorous
+                g = g - blob.amorous/8
+                b = b - blob.amorous/8
+            else
+                r = r + blob.amorous/2
+                g = g + blob.amorous/6
+                b = b - blob.amorous/5
             end
-            love.graphics.setColor(r, g, b)
+
+            if blob.hover then
+                r = r + 0.5
+                g = g + 0.5
+                b = b + 0.5
+            end
+            love.graphics.setColor(util.clamp(r*255, 0, 255), util.clamp(g*255, 0, 255), util.clamp(b*255, 0, 255))
             love.graphics.draw(self.sprite, self.quad, blob.x, blob.y, 0, blob.r, blob.r, 1, 1)
         end
     end)
@@ -295,7 +309,7 @@ function Slime:atPosition(x, y)
         if not blob.pressed then
             local dx, dy = x - blob.x, y - blob.y
             local dd2 = dx*dx + dy*dy
-            if dd2 < blob.mass*blob.mass/2 and (not distance or dd2/blob.mass < distance) then
+            if dd2 < blob.mass/2 and (not distance or dd2/blob.mass < distance) then
                 nearest = blob
                 distance = dd2/blob.mass
             end
