@@ -15,7 +15,7 @@ function love.conf(t)
     t.window.width = 1280
     t.window.height = 960
 
-    t.version = "0.10.2"
+    t.version = "11.2"
 
     t.identity = "SlimeFriend"
     t.window.title = "Slime Friend!"

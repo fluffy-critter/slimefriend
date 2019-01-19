@@ -26,12 +26,14 @@ function Slime.new(o)
         yBottom = 768
     })
 
-    local fpFormat = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f")
+    local fpFormat = {
+        format = gfx.selectCanvasFormat("rgba32f", "rgba", "rgba16f", "rg11b10f"),
+    }
 
     self.densityMap = love.graphics.newCanvas(self.width, self.height, fpFormat)
     self.colorMap = love.graphics.newCanvas(self.width, self.height, fpFormat)
     self.canvas = love.graphics.newCanvas(self.width, self.height,
-        gfx.selectCanvasFormat("rgba8", "rgb10a2", "rgb5a1", "rgba4"))
+        { format = gfx.selectCanvasFormat("rgba8", "rgb10a2", "rgb5a1", "rgba4") })
 
     self.shader = love.graphics.newShader("slime.fs")
 
@@ -244,7 +246,7 @@ function Slime:draw(background, foreground)
 
         love.graphics.setBlendMode("add", "premultiplied")
         for _,blob in pairs(self.blobs) do
-            love.graphics.setColor(math.sqrt(blob.mass), 255, 255)
+            love.graphics.setColor(math.sqrt(blob.mass)/255, 1, 1)
             love.graphics.draw(self.sprite, self.quad, blob.x, blob.y, 0, blob.r, blob.r, 1, 1)
         end
     end)
@@ -270,7 +272,7 @@ function Slime:draw(background, foreground)
                 g = g + 0.5
                 b = b + 0.5
             end
-            love.graphics.setColor(util.clamp(r*255, 0, 255), util.clamp(g*255, 0, 255), util.clamp(b*255, 0, 255))
+            love.graphics.setColor(util.clamp(r, 0, 1), util.clamp(g, 0, 1), util.clamp(b, 0, 1))
             love.graphics.draw(self.sprite, self.quad, blob.x, blob.y, 0, blob.r, blob.r, 1, 1)
         end
     end)
@@ -280,7 +282,7 @@ function Slime:draw(background, foreground)
 
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.setShader(self.shader)
-        love.graphics.setColor(255,255,255)
+        love.graphics.setColor(1,1,1)
         self.shader:send("lightDir", {-10, -10, 1})
         self.shader:send("densityMap", self.densityMap)
         self.shader:send("background", background)
@@ -292,7 +294,7 @@ function Slime:draw(background, foreground)
         love.graphics.setShader()
 
         if config.debug then
-            love.graphics.setColor(255,255,255,255)
+            love.graphics.setColor(1,1,1,1)
             for _,blob in pairs(self.blobs) do
                 love.graphics.circle("line", blob.x, blob.y, blob.r)
             end

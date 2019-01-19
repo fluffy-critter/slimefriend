@@ -190,7 +190,7 @@ function love.draw()
     Game.layers.reflection:renderTo(function()
         love.graphics.setBlendMode("alpha")
         love.graphics.clear(0,0,0,0)
-        love.graphics.setColor(255,255,255)
+        love.graphics.setColor(1,1,1)
 
         love.graphics.draw(tableBack)
 
@@ -205,7 +205,7 @@ function love.draw()
 
     Game.canvas:renderTo(function()
         love.graphics.setBlendMode("alpha", "premultiplied")
-        love.graphics.setColor(255,255,255)
+        love.graphics.setColor(1,1,1)
         love.graphics.draw(Game.layers.background)
 
         love.graphics.setColor(0,0,0)
@@ -214,7 +214,7 @@ function love.draw()
         love.graphics.draw(slimeCanvas, 1, -1)
         love.graphics.draw(slimeCanvas, 1, 1)
 
-        love.graphics.setColor(255,255,255)
+        love.graphics.setColor(1,1,1)
         love.graphics.draw(slimeCanvas)
 
         love.graphics.draw(tableFront)
